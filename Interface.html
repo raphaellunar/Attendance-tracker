@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; }
+        #reader { width: 100%; max-width: 500px; margin: 0 auto; }
+        #result { font-size: 24px; font-weight: bold; margin-top: 20px; color: green; }
+    </style>
+</head>
+<body>
+    <h1>QR Attendance Scanner</h1>
+    <div id="reader"></div>
+    <div id="result">Waiting for scan...</div>
+
+    <script>
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbwJeYN3XrdWc2P304zAD0Zthxd1HEjQEU4Htb4IOI9bGCi29j8j3gcG2XaiOvFra1yq/exec";
+        
+        function onScanSuccess(decodedText, decodedResult) {
+            document.getElementById('result').innerText = "Verifying...";
+            
+            // Pause scanner while checking
+            html5QrcodeScanner.pause();
+
+            fetch(`${scriptUrl}?id=${decodedText}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        document.getElementById('result').innerText = `Welcome, ${data.name}!`;
+                    } else {
+                        document.getElementById('result').innerText = "❌ Invalid Ticket";
+                        document.getElementById('result').style.color = "red";
+                    }
+                    // Resume scanner after 3 seconds
+                    setTimeout(() => html5QrcodeScanner.resume(), 3000);
+                });
+        }
+
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+</body>
+</html>
